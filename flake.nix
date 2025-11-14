@@ -3,11 +3,11 @@
     inputs = {
         libSource.url = "github:nix-community/nixpkgs.lib";
         flakeUtils.url = "github:numtide/flake-utils";
-        core.url = "path:./helpers/builtins"; # for overriding builtins
+        # core.url = "path:./helpers/builtins"; # for overriding builtins
     };
-    outputs = { self, libSource, flakeUtils, core ? builtins, ... }:
+    outputs = { self, libSource, flakeUtils, ... }:
         let
-            builtins = core; # lets builtins be overridden by others
+            # builtins = core; # lets builtins be overridden by others
             # maintainers and teams fail to evaluate when from the pure "nixpkgs.lib" repo
             # overriding them means the lib isn't going to throw an error now 
             lib = libSource.lib // {
