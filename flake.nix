@@ -384,15 +384,21 @@
                                                                             {}
                                                                             filteredAndMappedNoNulls
                                                                         )
-                                                                    else if builtins.typeOf strJoin == "string" then
+                                                                    else if (builtins.typeOf strJoin) == "string" then
                                                                         (builtins.foldl'
                                                                             (acc: elem:
                                                                                 # skip nulls
                                                                                 if elem == null then
-                                                                                    acc
+                                                                                    if acc == null then
+                                                                                        ""
+                                                                                    else
+                                                                                        acc
                                                                                 # concat if strings
                                                                                 else if canBeNicelyCorcedToString elem then
-                                                                                    acc + (builtins.toString elem)
+                                                                                    if acc == null then
+                                                                                        (builtins.toString elem)
+                                                                                    else
+                                                                                        acc + strJoin + (builtins.toString elem)
                                                                                 else
                                                                                     (builtins.trace
                                                                                         (builtins.trace
@@ -402,7 +408,7 @@
                                                                                         throw "aggregator: strJoin only works with strings and things that nicely coerce to strings (paths, ints, etc), instead of any of those I got a type of ${builtins.typeOf elem}"
                                                                                     )
                                                                             )
-                                                                            ""
+                                                                            null
                                                                             filteredAndMappedNoNulls
                                                                         )
                                                                     else
