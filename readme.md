@@ -64,13 +64,29 @@ Adding tools like `print` while extending `nixpkgs.lib` and `flake-utils` for a 
                     { vals.pkg=pkgs.python313Packages.matplotlib; flags.isPythonPackage=true; }
                     
                     # custom handling
-                    ({ prevVals, getAll, ... }: {
+                    ({ prevVals, mergedVals, getAll, ... }: {
                         vals.pkg=python3.withPackages (getAll { flags=[ "isPythonPackage" ]; attrPath=[ "pkg" ]; });
                     })
                 ];
+                # list of pkgs
                 buildInputs = aggregation.getAll { attrPath=[ "pkg" ]; };
                 shellHook   = aggregation.getAll { attrPath=[ "shellHook" ]; strJoin="\n"; };
+                # ^string of combined shellHooks
                 devShellInputs = buildInputs ++ aggregation.getAll { attrPath=["devShellPkg"]; };
+                
+                # showcase of all available "getAll" options:
+                someOtherGroup = aggregation.getAll {
+                    # NOTE: these are applied in the order that is shown here (each one acts, at least partly, like a filter)
+                    hasNoneOfTheseFlags = [ "onlyInDevShell" "excludeFromGroup7" ],
+                    hasAllFlags = [ "isPythonPackage" ],
+                    filterIn = (each: true), # true = keep, based on each.flags, each.vals
+                    attrPath = [ "thing" "subthing" ], # maps to vals.${"thing"}.${"subthing"} if it exists and is not null
+                    mapVals = (each: each), # each will be each.vals.${"thing"}.${"subthing"} (if attrPath was given)
+                    keepNullVals = false, # filters out nulls from the result of mapVals
+                    strAppend = null, # assumes/coerces each to a string and appends a string to the end of each (good for paths)
+                    mergeVals = false, # if all values are attrsets it merges them into one. It does best-effort merging if they're not attrsets
+                    strJoin = ":", # instead of merging it joins them with the given string (good for paths) don't use this with mergeVals
+                };
             in
                 {
                     # your code here
