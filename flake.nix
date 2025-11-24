@@ -303,7 +303,24 @@
                                                 let
                                                     newAll = run.prevAttrsets ++ [ elem ];
                                                     newMergedVals = lib.recursiveUpdate run.mergedVals elem.vals;
-                                                    mapOverFlagged = (flags: mapCallback:
+                                                    mapOverNotFlagged = (newAll: flags: mapCallback:
+                                                        if builtins.length flags == 0 then
+                                                            newAll
+                                                        else 
+                                                            let
+                                                                hasNoneOfTheseFlags = (eachElement:
+                                                                    eachElement ? flags && (builtins.typeOf eachElement.flags) == "set" && ! (lib.any
+                                                                        (eachFlagString: (eachElement.flags ? "${eachFlagString}") && eachElement.flags."${eachFlagString}" != false && eachElement.flags."${eachFlagString}" != null)
+                                                                        flags
+                                                                    )
+                                                                );
+                                                            in
+                                                                if builtins.length flags == 0 then
+                                                                    lib.map mapCallback newAll
+                                                                else
+                                                                    lib.map mapCallback (lib.filter hasNoneOfTheseFlags newAll)
+                                                    );
+                                                    mapOverFlagged = (newAll: flags: mapCallback:
                                                         let
                                                             hasAllFlags = (eachElement:
                                                                 eachElement ? flags && (builtins.typeOf eachElement.flags) == "set" && (lib.all
@@ -325,9 +342,10 @@
                                                         prevAttrsets = newAll;
                                                         mergedVals = newMergedVals;
                                                         errorIndex = idx;
-                                                        getAll = ({ hasAllFlags?[], filterIn?(each: true), attrPath?null, mapVals?(eachVals: eachVals), keepNullVals?false, strAppend?null, mergeVals?false, strJoin?null, }: 
+                                                        getAll = ({ hasNoneOfTheseFlags?[], hasAllFlags?[], filterIn?(each: true), attrPath?null, mapVals?(each: each), keepNullVals?false, strAppend?null, mergeVals?false, strJoin?null, }: 
                                                             let
-                                                                elementsAfterHasAllFlags = mapOverFlagged hasAllFlags (each: each);
+                                                                elementsAfterHasNoneOfTheseFlags = mapOverNotFlagged newAll hasNoneOfTheseFlags (each: each);
+                                                                elementsAfterHasAllFlags = mapOverFlagged elementsAfterHasNoneOfTheseFlags hasAllFlags (each: each);
                                                                 elementsAfterCustomFilter = (builtins.filter
                                                                     filterIn
                                                                     elementsAfterHasAllFlags
@@ -446,7 +464,7 @@
                         prevVals = [];
                         prevAttrsets = [];
                         mergedVals = {};
-                        getAll = ({ hasAllFlags?[], filterIn?(each: true), attrPath?null, mapVals?(eachVals: eachVals), strAppend?null, mergeVals?false, strJoin?null, }:
+                        getAll = ({ hasNoneOfTheseFlags?[], hasAllFlags?[], filterIn?(each: true), attrPath?null, mapVals?(each: each), strAppend?null, mergeVals?false, strJoin?null, }:
                             if mergeVals != false && mergeVals != null then
                                 {}
                             else if builtins.isString strJoin then
