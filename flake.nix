@@ -307,7 +307,7 @@
                                                         let
                                                             hasAllFlags = (eachElement:
                                                                 eachElement ? flags && (builtins.typeOf eachElement.flags) == "set" && (lib.all
-                                                                    (eachFlagString: eachElement.flags ? "${eachFlagString}")
+                                                                    (eachFlagString: (eachElement.flags ? "${eachFlagString}") && eachElement.flags."${eachFlagString}" != false && eachElement.flags."${eachFlagString}" != null)
                                                                     flags
                                                                 )
                                                             );
