@@ -353,15 +353,20 @@
                                                                 filteredValsAfterAttrPath = (
                                                                     if attrPath == null then
                                                                         elementsAfterCustomFilter
+                                                                    else if ! builtins.isList attrPath then
+                                                                        builtins.throw "when calling \n    aggregation.getAll { attrPath = /*your value */}\n     # from aggreation = lib.aggregator [ /* something */ ])\n\nthe attrPath argument must be a list of strings\ninstead it was type: ${builtins.typeOf attrPath}"
                                                                     else
-                                                                        (builtins.map
-                                                                            (each:
-                                                                                if hasDeepAttribute each ([ "vals" ] ++ attrPath) then
-                                                                                    getDeepAttribute each ([ "vals" ] ++ attrPath)
-                                                                                else
-                                                                                    null
+                                                                        (builtins.filter
+                                                                            (each: each != null)
+                                                                            (builtins.map
+                                                                                (each:
+                                                                                    if hasDeepAttribute each ([ "vals" ] ++ attrPath) then
+                                                                                        getDeepAttribute each ([ "vals" ] ++ attrPath)
+                                                                                    else
+                                                                                        null
+                                                                                )
+                                                                                elementsAfterCustomFilter
                                                                             )
-                                                                            elementsAfterCustomFilter
                                                                         )
                                                                 );
                                                                 filteredValsAfterAttrPathAndMap = (builtins.map
